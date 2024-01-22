@@ -69,22 +69,25 @@ gcyb --repo path/to/repo
 
 Ensure you have [Go](https://go.dev/) installed on your system.
 
-```bash
+```md
 # Clone the repository
-git clone https://github.com/your-username/gcyb.git
+
+git clone https://github.com/lucaspiritogit/gcyb.git
 
 # Change to the project directory
+
 cd gcyb
 
 # Build the binary
+
 go build
 
 ||
 
 go build -o gcyb
 
-
 # Run the binary
+
 ./gcyb
 ```
 

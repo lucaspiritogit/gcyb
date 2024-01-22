@@ -31,7 +31,7 @@ var rootCmd = &cobra.Command{
 		"that were already merged in your current branch/HEAD. This CLI tool will never delete or update " +
 		"remote branches without your permission. The commands of reading and deleting branches are separated " +
 		"to avoid possible unwanted cleaning of programmers (branches).",
-	Run: runGcybReadCommand,
+	Run: runGcybDryReadCommand,
 }
 
 var cleanCmd = &cobra.Command{
@@ -83,20 +83,26 @@ func Checkboxes(label string, opts []string) []string {
 	return selectedBranches
 }
 
-func runGcybReadCommand(cmd *cobra.Command, args []string) {
+func runGcybDryReadCommand(cmd *cobra.Command, args []string) {
 	branches := utils.FetchLocalBranches(repoPath)
 	currentBranch, err := utils.GetCurrentBranch(repoPath)
 	if err != nil {
 		fmt.Println("Error:", err)
+		os.Exit(1)
 	}
 	deletableBranches, reasonOfDeletion := checkDeletableBranches(branches, repoPath)
 
-	displayTableReadOnlyDeletableBranches(currentBranch, deletableBranches, reasonOfDeletion)
+	displayReadOnlyTableWithDeletableBranches(currentBranch, deletableBranches, reasonOfDeletion)
 }
 
 func runDeleteBranchesCommand(cmd *cobra.Command, args []string) {
 	branches := utils.FetchLocalBranches(repoPath)
 	deletableBranches, reasonOfDeletion := checkDeletableBranches(branches, repoPath)
+	currentBranch, err := utils.GetCurrentBranch(repoPath)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
 
 	if len(deletableBranches) == 0 {
 		fmt.Print("Nothing to clean!")
@@ -133,16 +139,7 @@ func runDeleteBranchesCommand(cmd *cobra.Command, args []string) {
 	}
 
 	if cmd.Use == "clean" {
-		reasons := make(map[string]string)
-		fmt.Println("")
-		fmt.Printf("%-30s %s\n", "Deletable branches", "Reason for Deletion")
-		fmt.Println(strings.Repeat("-", 50))
-		for _, branch := range deletableBranches {
-			reasons[branch] = reasonOfDeletion
-			fmt.Printf("%-30s %s\n", utils.ShortenBranchName(branch), reasonOfDeletion)
-		}
-		fmt.Println(strings.Repeat("-", 50))
-		fmt.Println("")
+		displayReadOnlyTableWithDeletableBranches(currentBranch, deletableBranches, reasonOfDeletion)
 		waitForConfirmationToDeleteBranches(deletableBranches)
 	}
 }
@@ -211,18 +208,18 @@ func deletableBranchesWithReason(branches []string, reasons map[string]string) [
 	return branchList
 }
 
-func displayTableReadOnlyDeletableBranches(currentBranch string, deletableBranches []string, reasonOfDeletion string) {
+func displayReadOnlyTableWithDeletableBranches(currentBranch string, deletableBranches []string, reasonOfDeletion string) {
 
 	fmt.Println("")
 	fmt.Println("Current Branch:", Green+currentBranch+Reset)
-	fmt.Println(strings.Repeat("-", 50))
-	fmt.Printf("%-30s %s\n", "Branches to be Deleted", "Reason for Deletion")
-	fmt.Println(strings.Repeat("-", 50))
+	fmt.Println(strings.Repeat("-", 70))
+	fmt.Printf("%-25s %s\n", "Deletable branches", "Reason for Deletion")
+	fmt.Println(strings.Repeat("-", 70))
 
 	for _, branch := range deletableBranches {
-		fmt.Printf("%-30s %s\n", utils.ShortenBranchName(branch), Yellow+reasonOfDeletion+Reset)
+		fmt.Printf("%-25s %s\n", utils.ShortenBranchName(branch), Yellow+reasonOfDeletion+Reset)
 	}
-	fmt.Println(strings.Repeat("-", 50))
+	fmt.Println(strings.Repeat("-", 70))
 	fmt.Println("")
 }
 

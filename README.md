@@ -13,15 +13,15 @@
 
 1. `gcyb`
 
-The default execution of the CLI. It will render a table with each branch that could be deleted, and the reason of it. It does not clean or execute a delete, it only displays.
+The default execution of the CLI. It will render a table with each branch that could be deleted, and the reason of it. It does not clean or delete.
 
 ```bash
 gcyb
 ```
 
-2. `gcyb clean`
+1. `gcyb clean`
 
-Deletes every branch that is considered 'deletable'. To be eligible for deletion, a branch must be already merged into your current branch.
+Deletes every branch that is considered 'deletable'. To be eligible for deletion, a branch must be already merged into your current branch. _This command will ask for permission, twice_.
 
 ```bash
 gcyb clean
@@ -29,26 +29,19 @@ gcyb clean
 
 3. `gcyb pick`
 
-Interactively select which branches you want to delete. The command will display a list of deletable branches, and you can choose the ones to delete.
+Interactively select which branches you want to delete.
 
 ```bash
 gcyb pick
 ```
 
-4. `gcyb help`
+1. `gcyb help`
 
 Displays information on each command or flag of gcyb.
 
 ```bash
-gcyb help
-
-||
-
-gcyb -h
-
-||
-
-gcyb --help
+# Any of these counts as valid.
+gcyb help | gcyb -h | gcyb --help
 ```
 
 ## Flags
@@ -58,11 +51,8 @@ gcyb --help
 Can specify the path of a local git repository, instead of using the working directory (current dir).
 
 ```bash
-gcyb -r path/to/repo
-
-||
-
-gcyb --repo path/to/repo
+# Any of these counts as valid.
+gcyb -r path/to/repo | gcyb --repo path/to/repo
 ```
 
 ## Building from Source
@@ -81,10 +71,6 @@ cd gcyb
 # Build the binary
 
 go build
-
-||
-
-go build -o gcyb
 
 # Run the binary
 

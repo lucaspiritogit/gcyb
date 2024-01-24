@@ -24,6 +24,7 @@ const (
 )
 
 var repoPath string
+var branchAndReasonSeparator string = " | "
 
 var rootCmd = &cobra.Command{
 	Use: "gcyb",
@@ -75,7 +76,7 @@ func Checkboxes(label string, opts []string) []string {
 
 	var selectedBranches []string
 	for _, selected := range res {
-		branchName := strings.Split(selected, " |")
+		branchName := strings.Split(selected, branchAndReasonSeparator)
 		if len(branchName) > 0 {
 			selectedBranches = append(selectedBranches, branchName[0])
 		}
@@ -97,7 +98,7 @@ func runGcybDryReadCommand(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	displayReadOnlyTableWithDeletableBranches(currentBranch, deletableBranches, reasonOfDeletion)
+	displayDeletableBranchesTable(currentBranch, deletableBranches, reasonOfDeletion)
 }
 
 func runDeleteBranchesCommand(cmd *cobra.Command, args []string) {
@@ -133,7 +134,7 @@ func runDeleteBranchesCommand(cmd *cobra.Command, args []string) {
 
 		selectedBranches := Checkboxes(
 			"Select branches to delete",
-			deletableBranchesWithReason(deletableBranches, reasons),
+			appendReasonToDeletableBranch(deletableBranches, reasons),
 		)
 
 		if len(selectedBranches) == 0 {
@@ -146,7 +147,7 @@ func runDeleteBranchesCommand(cmd *cobra.Command, args []string) {
 	}
 
 	if cmd.Use == "clean" {
-		displayReadOnlyTableWithDeletableBranches(currentBranch, deletableBranches, reasonOfDeletion)
+		displayDeletableBranchesTable(currentBranch, deletableBranches, reasonOfDeletion)
 		waitForConfirmationToDeleteBranches(deletableBranches)
 	}
 }
@@ -211,12 +212,12 @@ func checkDeletableBranches(branches []string, repoPath string) ([]string, strin
 	return deletableBranches, reasonOfDeletion
 }
 
-func deletableBranchesWithReason(branches []string, reasons map[string]string) []string {
+func appendReasonToDeletableBranch(branches []string, reasons map[string]string) []string {
 	var branchList []string
 	for _, branch := range branches {
 		reason, exists := reasons[branch]
 		if exists {
-			branchList = append(branchList, fmt.Sprintf("%s %s", strings.TrimSpace(branch)+" |", strings.TrimSpace(strings.TrimPrefix(reason, "|"))))
+			branchList = append(branchList, strings.TrimSpace(branch)+branchAndReasonSeparator+reason)
 		} else {
 			branchList = append(branchList, branch)
 		}
@@ -224,7 +225,7 @@ func deletableBranchesWithReason(branches []string, reasons map[string]string) [
 	return branchList
 }
 
-func displayReadOnlyTableWithDeletableBranches(currentBranch string, deletableBranches []string, reasonOfDeletion string) {
+func displayDeletableBranchesTable(currentBranch string, deletableBranches []string, reasonOfDeletion string) {
 
 	fmt.Println("")
 	fmt.Println("Current Branch:", Green+currentBranch+Reset)
@@ -243,12 +244,13 @@ func deleteBranches(branches []string, repoPath string) {
 
 	for _, branch := range branches {
 		deleteCmd := exec.Command("git", "branch", "-d", branch)
-		deleteCmd.Dir = repoPath
-		if err := deleteCmd.Run(); err != nil {
-			fmt.Println("Error deleting branch", branch, ":", err)
-			fmt.Println("The branch " + branch + " has not been deleted.")
-			fmt.Print(err)
-			os.Exit(1)
+		output, err := deleteCmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("Error deleting branch %s: %v\n", branch, err)
+
+			fmt.Printf("Command output:\n%s\n", output)
+		} else {
+			fmt.Printf("Branch %s deleted successfully.\n", branch)
 		}
 	}
 

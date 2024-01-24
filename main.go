@@ -194,7 +194,7 @@ func checkDeletableBranches(branches []string, repoPath string) ([]string, strin
 	var reasonOfDeletion string
 	for _, branch := range branches {
 
-		isDefaultOrCurrentBranch := defaultBranches[branch] || strings.EqualFold(branch, currentBranch)
+		var isDefaultOrCurrentBranch bool = defaultBranches[branch] || strings.EqualFold(branch, currentBranch)
 		if isDefaultOrCurrentBranch {
 			continue
 		}

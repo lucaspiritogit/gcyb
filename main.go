@@ -92,21 +92,28 @@ func runGcybDryReadCommand(cmd *cobra.Command, args []string) {
 	}
 	deletableBranches, reasonOfDeletion := checkDeletableBranches(branches, repoPath)
 
+	if len(deletableBranches) == 0 {
+		fmt.Print("Nothing to clean!")
+		os.Exit(0)
+	}
+
 	displayReadOnlyTableWithDeletableBranches(currentBranch, deletableBranches, reasonOfDeletion)
 }
 
 func runDeleteBranchesCommand(cmd *cobra.Command, args []string) {
 	branches := utils.FetchLocalBranches(repoPath)
 	deletableBranches, reasonOfDeletion := checkDeletableBranches(branches, repoPath)
-	currentBranch, err := utils.GetCurrentBranch(repoPath)
-	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
-	}
 
 	if len(deletableBranches) == 0 {
 		fmt.Print("Nothing to clean!")
 		os.Exit(0)
+	}
+
+	currentBranch, err := utils.GetCurrentBranch(repoPath)
+
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
 	}
 
 	reasons := make(map[string]string)
@@ -175,10 +182,19 @@ func checkDeletableBranches(branches []string, repoPath string) ([]string, strin
 
 	alreadyMergedBranchesList = utils.SanitizeBranchArray(alreadyMergedBranchesList)
 
+	defaultBranches := map[string]bool{
+		"master":      true,
+		"main":        true,
+		"development": true,
+		"dev":         true,
+		"testing":     true,
+		"test":        true,
+	}
+
 	var reasonOfDeletion string
 	for _, branch := range branches {
 
-		isDefaultOrCurrentBranch := strings.EqualFold(branch, "master") || strings.EqualFold(branch, "main") || strings.EqualFold(branch, currentBranch)
+		isDefaultOrCurrentBranch := defaultBranches[branch] || strings.EqualFold(branch, currentBranch)
 		if isDefaultOrCurrentBranch {
 			continue
 		}

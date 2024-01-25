@@ -98,7 +98,7 @@ Downloading an .exe could and should be scary.
 To verify the integrity of the gcyb.exe binary on Windows, you can use the Get-FileHash command. Open a PowerShell window and run the following command:
 
 ```pwsh
-Get-FileHash SHA256 gcyb.exe
+Get-FileHash gcyb.exe
 ```
 
 ### Linux

@@ -54,6 +54,18 @@ Can specify the path of a local git repository, instead of using the working dir
 # Any of these counts as valid.
 gcyb -r path/to/repo | gcyb --repo path/to/repo
 ```
+## Ignored branch names
+
+It is common to have branches where we merge our changes depending on the environment. For that reason, `gcyb` will **not** recognize or try to clean the following branches:
+
+- main
+- master
+- development
+- dev
+- testing
+- test
+
+*More items could be added to the list in the future.*
 
 ## Building from Source
 
@@ -101,4 +113,4 @@ Compare the output checksum with the one provided in the [Releases](https://gith
 
 ## Contributing
 
-If you found this repo and you want to contribute to this project, please, feel free to open issue or PR's! Feedback and contributions are welcome.
+Feel free to open issue or PR's. Feedback and contributions are welcome.

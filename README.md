@@ -13,15 +13,15 @@
 
 1. `gcyb`
 
-The default execution of the CLI. It will render a table with each branch that could be deleted, and the reason of it. It does not clean or execute a delete, it only displays.
+The default execution of the CLI. It will render a table with each branch that could be deleted, and the reason of it. It does not clean or delete.
 
 ```bash
 gcyb
 ```
 
-2. `gcyb clean`
+1. `gcyb clean`
 
-Deletes every branch that is considered 'deletable'. To be eligible for deletion, a branch must be already merged into your current branch.
+Deletes every branch that is considered 'deletable'. To be eligible for deletion, a branch must be already merged into your current branch. _This command will ask for permission, twice_.
 
 ```bash
 gcyb clean
@@ -29,26 +29,19 @@ gcyb clean
 
 3. `gcyb pick`
 
-Interactively select which branches you want to delete. The command will display a list of deletable branches, and you can choose the ones to delete.
+Interactively select which branches you want to delete.
 
 ```bash
 gcyb pick
 ```
 
-4. `gcyb help`
+1. `gcyb help`
 
 Displays information on each command or flag of gcyb.
 
 ```bash
-gcyb help
-
-||
-
-gcyb -h
-
-||
-
-gcyb --help
+# Any of these counts as valid.
+gcyb help | gcyb -h | gcyb --help
 ```
 
 ## Flags
@@ -58,12 +51,21 @@ gcyb --help
 Can specify the path of a local git repository, instead of using the working directory (current dir).
 
 ```bash
-gcyb -r path/to/repo
-
-||
-
-gcyb --repo path/to/repo
+# Any of these counts as valid.
+gcyb -r path/to/repo | gcyb --repo path/to/repo
 ```
+## Ignored branch names
+
+It is common to have branches where we merge our changes depending on the environment. For that reason, `gcyb` will **not** recognize or try to clean the following branches:
+
+- main
+- master
+- development
+- dev
+- testing
+- test
+
+*More items could be added to the list in the future.*
 
 ## Building from Source
 
@@ -82,10 +84,6 @@ cd gcyb
 
 go build
 
-||
-
-go build -o gcyb
-
 # Run the binary
 
 ./gcyb
@@ -100,7 +98,7 @@ Downloading an .exe could and should be scary.
 To verify the integrity of the gcyb.exe binary on Windows, you can use the Get-FileHash command. Open a PowerShell window and run the following command:
 
 ```pwsh
-Get-FileHash SHA256 gcyb.exe
+Get-FileHash gcyb.exe
 ```
 
 ### Linux
@@ -115,4 +113,4 @@ Compare the output checksum with the one provided in the [Releases](https://gith
 
 ## Contributing
 
-If you found this repo and you want to contribute to this project, please, feel free to open issue or PR's! Feedback and contributions are welcome.
+Feel free to open issue or PR's. Feedback and contributions are welcome.

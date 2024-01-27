@@ -71,29 +71,44 @@ It is common to have branches where we merge our changes depending on the enviro
 
 Ensure you have [Go](https://go.dev/) installed on your system.
 
-```md
-# Clone the repository
+### Clone the repository
 
+```bash
 git clone https://github.com/lucaspiritogit/gcyb.git
+```
 
-# Change to the project directory
+### Change to the project directory
 
+```bash
 cd gcyb
+```
 
-# Build the binary
+### Build the binary
 
+```go
 go build
+```
 
-# Run the binary
+### (Optional) Install it to use it globally
 
-./gcyb
+```go
+go install
+```
+
+### Run the binary
+
+```bash
+gcyb | ./gcyb | ./gcyb.exe
 ```
 
 ## Verify checksum of binary
 
-Downloading an .exe could and should be scary.
+Downloading an .exe could and should be approached with caution, especially due to the potential risks associated with malware and viruses. While I provide the .exe in each Release for the convenience of users who do not wish to install Golang on their systems, its important to verify the integrity of the downloaded binary. I always recommend to build from source when its possible.
+
 
 ### Windows
+
+*Note: Windows is popular for giving false positives on virus detection. If you encounter any problem, please let me know.*
 
 To verify the integrity of the gcyb.exe binary on Windows, you can use the Get-FileHash command. Open a PowerShell window and run the following command:
 

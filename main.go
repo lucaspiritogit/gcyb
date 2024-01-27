@@ -36,8 +36,9 @@ var defaultBranches = map[string]bool{
 }
 
 var rootCmd = &cobra.Command{
-	Use: "gcyb",
-	Short: "gcyb (Go Clean Your Branches) is a CLI tool for Git to detect and, optionally, delete branches " +
+	Use:   "gcyb",
+	Short: "Displays a table of branches that could be cleaned and the reason of it. It does not delete branches.",
+	Long: "gcyb (Go Clean Your Branches) is a CLI tool for Git to detect and, optionally, delete branches " +
 		"that were already merged in your current branch/HEAD. This CLI tool will never delete or update " +
 		"remote branches without your permission. The commands of reading and deleting branches are separated " +
 		"to avoid possible unwanted cleaning of programmers (branches).",
@@ -46,27 +47,25 @@ var rootCmd = &cobra.Command{
 
 var cleanCmd = &cobra.Command{
 	Use:   "clean",
-	Short: "Delete every branch that is considered 'deletable'. For a branch to be elegible as 'deletable', it needs to be already merged in your branch. Stale branches, meaning branches that are not receiving commits for a long time, should be analyzed by the user and not by a third party app due to not knowing if the commits are safe to lose.",
+	Short: "Deletes the deletable branches after 2 confirmations.",
+	Long:  "Delete every branch that is considered 'deletable'. For a branch to be elegible as 'deletable', it needs to be already merged in your branch. Stale branches, meaning branches that are not receiving commits for a long time, should be analyzed by the user and not by a third party app due to not knowing if the commits are safe to lose.",
 	Run:   runDeleteBranchesCommand,
 }
 
 var pickCmd = &cobra.Command{
 	Use:   "pick",
-	Short: "Select which branches you want to delete",
+	Short: "Select which branches you want to delete.",
 	Run:   runDeleteBranchesCommand,
 }
 
 func init() {
-
 	if !utils.IsGitRepository() {
 		fmt.Println("Not a git repository.")
 		os.Exit(1)
 	}
 
-	rootCmd.AddCommand(cleanCmd)
-	rootCmd.AddCommand(pickCmd)
-
-	rootCmd.PersistentFlags().StringVarP(repoPath, "repo", "r", ".", "Local path to the git repository.")
+	rootCmd.AddCommand(cleanCmd, pickCmd)
+	rootCmd.PersistentFlags().StringVarP(repoPath, "repo", "r", defaultRepoPath, "Specify a local path to a git repository.")
 }
 
 func main() {

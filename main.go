@@ -23,12 +23,22 @@ const (
 	BackgroundRed = "\033[41m"
 )
 
-var repoPath string
+var defaultRepoPath string = "."
+var repoPath *string = &defaultRepoPath
 var branchAndReasonSeparator string = " | "
+var defaultBranches = map[string]bool{
+	"master":      true,
+	"main":        true,
+	"development": true,
+	"dev":         true,
+	"testing":     true,
+	"test":        true,
+}
 
 var rootCmd = &cobra.Command{
-	Use: "gcyb",
-	Short: "gcyb (Go Clean Your Branches) is a CLI tool for Git to detect and, optionally, delete branches " +
+	Use:   "gcyb",
+	Short: "Displays a table of branches that could be cleaned and the reason of it. It does not delete branches.",
+	Long: "gcyb (Go Clean Your Branches) is a CLI tool for Git to detect and, optionally, delete branches " +
 		"that were already merged in your current branch/HEAD. This CLI tool will never delete or update " +
 		"remote branches without your permission. The commands of reading and deleting branches are separated " +
 		"to avoid possible unwanted cleaning of programmers (branches).",
@@ -37,26 +47,25 @@ var rootCmd = &cobra.Command{
 
 var cleanCmd = &cobra.Command{
 	Use:   "clean",
-	Short: "Delete every branch that is considered 'deletable'. For a branch to be elegible as 'deletable', it needs to be already merged in your branch. Stale branches, meaning branches that are not receiving commits for a long time, should be analyzed by the user and not by a third party app due to not knowing if the commits are safe to lose.",
+	Short: "Deletes the deletable branches after 2 confirmations.",
+	Long:  "Delete every branch that is considered 'deletable'. For a branch to be elegible as 'deletable', it needs to be already merged in your branch. Stale branches, meaning branches that are not receiving commits for a long time, should be analyzed by the user and not by a third party app due to not knowing if the commits are safe to lose.",
 	Run:   runDeleteBranchesCommand,
 }
 
 var pickCmd = &cobra.Command{
 	Use:   "pick",
-	Short: "Select which branches you want to delete",
+	Short: "Select which branches you want to delete.",
 	Run:   runDeleteBranchesCommand,
 }
 
 func init() {
-
 	if !utils.IsGitRepository() {
 		fmt.Println("Not a git repository.")
 		os.Exit(1)
 	}
 
-	rootCmd.Flags().StringVarP(&repoPath, "repo", "r", ".", "Local path to the git repository.")
-	rootCmd.AddCommand(cleanCmd)
-	rootCmd.AddCommand(pickCmd)
+	rootCmd.AddCommand(cleanCmd, pickCmd)
+	rootCmd.PersistentFlags().StringVarP(repoPath, "repo", "r", defaultRepoPath, "Specify a local path to a git repository.")
 }
 
 func main() {
@@ -157,18 +166,17 @@ func waitForConfirmationToDeleteBranches(deletableBranches []string) {
 	if userResponse {
 		additionalConfirmation := utils.AskForConfirmation("Just to be sure, you are about to delete " + fmt.Sprint(len(deletableBranches)) + " branches. Confirm? (y/n)")
 		if additionalConfirmation {
-			deleteBranches(deletableBranches, repoPath)
+			deleteBranches(deletableBranches)
 		}
 	} else {
 		fmt.Println("No branches were deleted.")
 	}
 }
 
-func checkDeletableBranches(branches []string, repoPath string) ([]string, string) {
+func checkDeletableBranches(branches []string, repoPath *string) ([]string, string) {
 	var deletableBranches []string
 	alreadyMergedBranch := exec.Command("git", "branch", "--merged")
-	alreadyMergedBranch.Dir = repoPath
-
+	alreadyMergedBranch.Dir = *repoPath
 	alreadyMergedBranchesOutput, err := alreadyMergedBranch.Output()
 	if err != nil {
 		fmt.Print(err)
@@ -182,15 +190,6 @@ func checkDeletableBranches(branches []string, repoPath string) ([]string, strin
 	alreadyMergedBranchesList := strings.Split(string(alreadyMergedBranchesOutput), "\n")
 
 	alreadyMergedBranchesList = utils.SanitizeBranchArray(alreadyMergedBranchesList)
-
-	defaultBranches := map[string]bool{
-		"master":      true,
-		"main":        true,
-		"development": true,
-		"dev":         true,
-		"testing":     true,
-		"test":        true,
-	}
 
 	var reasonOfDeletion string
 	for _, branch := range branches {
@@ -240,15 +239,15 @@ func displayDeletableBranchesTable(currentBranch string, deletableBranches []str
 	fmt.Println("")
 }
 
-func deleteBranches(branches []string, repoPath string) {
-
+func deleteBranches(branches []string) {
 	for _, branch := range branches {
 		deleteCmd := exec.Command("git", "branch", "-d", branch)
+		deleteCmd.Dir = *repoPath
 		output, err := deleteCmd.CombinedOutput()
 		if err != nil {
-			fmt.Printf("Error deleting branch %s: %v\n", branch, err)
-
-			fmt.Printf("Command output:\n%s\n", output)
+			fmt.Printf("Error deleting branch '%s' %v\n", branch, err)
+			fmt.Printf("Command output: %s", output)
+			os.Exit(1)
 		} else {
 			fmt.Printf("Branch %s deleted successfully.\n", branch)
 		}

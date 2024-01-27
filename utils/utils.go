@@ -28,9 +28,9 @@ func SanitizeBranchArray(branches []string) []string {
 	return sanitizedBranches
 }
 
-func FetchLocalBranches(repoPath string) []string {
+func FetchLocalBranches(repoPath *string) []string {
 	allBranchesList := exec.Command("git", "branch", "--list")
-	allBranchesList.Dir = repoPath
+	allBranchesList.Dir = *repoPath
 
 	output, err := allBranchesList.Output()
 	if err != nil {
@@ -53,15 +53,14 @@ func IsBranchAlreadyMerged(branch string, mergedIntoMainBranches []string) bool 
 	return false
 }
 
-func GetCurrentBranch(repoPath string) (string, error) {
+func GetCurrentBranch(repoPath *string) (string, error) {
 	cmd := exec.Command("git", "branch", "--show-current")
-	cmd.Dir = repoPath
+	cmd.Dir = *repoPath
 
 	output, err := cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("error getting current branch: %v", err)
 	}
-
 	return strings.TrimSpace(string(output)), nil
 }
 

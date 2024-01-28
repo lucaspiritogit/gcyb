@@ -8,24 +8,17 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/AlecAivazis/survey/v2/terminal"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
 	"github.com/eiannone/keyboard"
 	"github.com/spf13/cobra"
-)
-
-const (
-	Reset         = "\033[0m"
-	Red           = "\033[31m"
-	Green         = "\033[32m"
-	Yellow        = "\033[33m"
-	Blue          = "\033[34m"
-	Bold          = "\033[1m"
-	Underline     = "\033[4m"
-	BackgroundRed = "\033[41m"
 )
 
 var defaultRepoPath string = "."
 var repoPath *string = &defaultRepoPath
 var branchAndReasonSeparator string = " | "
+
 var defaultBranches = map[string]bool{
 	"master":      true,
 	"main":        true,
@@ -81,7 +74,13 @@ func Checkboxes(label string, opts []string) []string {
 		Message: label,
 		Options: opts,
 	}
-	survey.AskOne(prompt, &res)
+	err := survey.AskOne(prompt, &res, survey.WithRemoveSelectAll(), survey.WithRemoveSelectNone())
+	if err != nil {
+		if err == terminal.InterruptErr {
+			fmt.Println("Interrupted")
+			os.Exit(1)
+		}
+	}
 
 	var selectedBranches []string
 	for _, selected := range res {
@@ -90,6 +89,7 @@ func Checkboxes(label string, opts []string) []string {
 			selectedBranches = append(selectedBranches, branchName[0])
 		}
 	}
+
 	return selectedBranches
 }
 
@@ -202,7 +202,7 @@ func checkDeletableBranches(branches []string, repoPath *string) ([]string, stri
 		if !utils.IsBranchAlreadyMerged(branch, alreadyMergedBranchesList) {
 			continue
 		} else {
-			reasonOfDeletion = Yellow + "Already merged in your current branch." + Reset
+			reasonOfDeletion = "Already merged in your current branch."
 		}
 
 		deletableBranches = append(deletableBranches, branch)
@@ -226,17 +226,31 @@ func appendReasonToDeletableBranch(branches []string, reasons map[string]string)
 
 func displayDeletableBranchesTable(currentBranch string, deletableBranches []string, reasonOfDeletion string) {
 
-	fmt.Println("")
-	fmt.Println("Current Branch:", Green+currentBranch+Reset)
-	fmt.Println(strings.Repeat("-", 70))
-	fmt.Printf("%-25s %s\n", "Deletable branches", "Reason for Deletion")
-	fmt.Println(strings.Repeat("-", 70))
+	defaultStyle := lipgloss.NewStyle()
+	reasonStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#d4db09"))
+	currentBranchStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#49c706"))
 
-	for _, branch := range deletableBranches {
-		fmt.Printf("%-25s %s\n", utils.ShortenBranchName(branch), Yellow+reasonOfDeletion+Reset)
+	formattedRows := make([][]string, 0)
+	for _, deletableBranch := range deletableBranches {
+		formattedRows = append(formattedRows, []string{deletableBranch, reasonOfDeletion})
 	}
-	fmt.Println(strings.Repeat("-", 70))
-	fmt.Println("")
+
+	t := table.New().
+		Width(59).
+		Border(lipgloss.NormalBorder()).
+		BorderStyle(lipgloss.NewStyle().
+			Foreground(lipgloss.Color("0xFFFF"))).
+		StyleFunc(func(row int, col int) lipgloss.Style {
+			if col == 1 && row != 0 {
+				return reasonStyle
+			}
+			return defaultStyle
+		}).
+		Headers("Branch", "Reason for deletion").
+		Rows(formattedRows...)
+
+	fmt.Println(t)
+	fmt.Println("Current branch: " + currentBranchStyle.Render(currentBranch))
 }
 
 func deleteBranches(branches []string) {

@@ -2,9 +2,7 @@ package utils
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -77,14 +75,10 @@ func AskForConfirmation(prompt string) bool {
 	fmt.Print(prompt + " ")
 	response, err := reader.ReadString('\n')
 	if err != nil {
-		if errors.Is(err, io.EOF) {
-			fmt.Println("Exiting the program.")
-			os.Exit(0)
-		} else {
-			fmt.Println("Error reading input:", err)
-			os.Exit(1)
-		}
+		fmt.Println("Error reading input:", err)
+		os.Exit(1)
 	}
+
 	response = strings.TrimSpace(response)
 	return strings.EqualFold(response, "y") || strings.EqualFold(response, "yes")
 }
